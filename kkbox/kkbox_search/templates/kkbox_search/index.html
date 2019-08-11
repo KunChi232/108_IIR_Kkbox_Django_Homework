@@ -1,0 +1,243 @@
+<body>
+    <h1>KKbox Search Web</h1>
+    <br>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+        body {font-family: Arial, Helvetica, sans-serif;}
+        
+        /* The Modal (background) */
+        .modal {
+          display: none; /* Hidden by default */
+          position: fixed; /* Stay in place */
+          z-index: 1; /* Sit on top */
+          padding-top: 100px; /* Location of the box */
+          left: 0;
+          top: 0;
+          width: 100%; /* Full width */
+          height: 100%; /* Full height */
+          overflow: auto; /* Enable scroll if needed */
+          background-color: rgb(0,0,0); /* Fallback color */
+          background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+        
+        /* Modal Content */
+        .modal-content {
+          background-color: #fefefe;
+          margin: auto;
+          padding: 20px;
+          border: 1px solid #888;
+          width: 20%;
+        }
+        
+        /* The Close Button */
+        .close {
+          color: #aaaaaa;
+          float: right;
+          font-size: 28px;
+          font-weight: bold;
+        }
+        
+        .close:hover,
+        .close:focus {
+          color: #000;
+          text-decoration: none;
+          cursor: pointer;
+        }
+        </style>
+        </head>
+        <body>
+    <div id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h4>歌名</h4>
+          <input type="text" id = "edit_song">
+          <h4>歌手</h4>
+          <input type="text" id = "edit_artist">
+          <h4>Url</h4>
+          <input type="text" id = "edit_url">
+          <h4>image</h4>
+          <input type="text" id = "edit_image">
+          <input type="button" value="送出" id = "done123" onclick="Done()">
+        </div>
+      
+      </div>
+   
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
+    <script>
+        var global
+        var span = document.getElementsByClassName("close")[0];
+        span.onclick = function(){
+            document.getElementById("myModal").style.display = 'none'
+        }
+        function Search()
+        {
+            alert("searching")
+            $.ajax({
+                type:"get",
+                url:"/search",
+                data:{
+                    song_name: $("#search_song").val()
+                },
+
+                success:function(data){
+                    $('.display').empty();
+                    var item = '<br>';
+                    for(var i = 0; i < data["song"].length; i++){
+                        item += '<div class = ' + data["id"][i] + '>' +
+                                    '<div> 歌曲 :' + data["song"][i] + 
+                                            ' 歌手: ' + data["artist"][i] +
+                                            ' url: <a href = '+ data["url"][i] + '>' + data["url"][i] + '</a> ' +
+                                            ' image: <img src = ' + data["image"][i]  +' '+ ' width = 150 height = 150 > ' + 
+                                    '</div> ' + 
+                                    '<div> <input type = "button" onclick = "Edit(this)" value = "修改" id = '+ data["id"][i] + '>' +
+                                            '<input type = "button" onclick = "Delete(this)" value = "刪除" id = ' + data["id"][i] + '> ' +
+                                    '</div>' +
+                                '</div>';
+                    }
+                    $('.display').append(item);
+                },
+                error:function(xhr){
+                    alert('error');
+                }
+            });
+        }
+
+        function Insert()
+        {
+            $.ajax({
+                type : 'post',
+                url : '/insert',
+                data : {
+                    song_name : $("#insert_song").val(),
+                    artist : $("#insert_artist").val(),
+                    url : $("#insert_url").val(),
+                    image : $("#insert_image").val(),
+                    length : $("#insert_length").val(),
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success : function(data)
+                {
+                    alert(data["response"]);
+                },
+                error :function(data){
+                    alert("fail");
+                }
+            });
+        }
+
+        function Edit(item)
+        {
+            $.ajax({
+                type : 'get',
+                url : 'edit',
+                data:{
+                    id : item.id
+                },
+                success:function(data){
+                    //document.getElementById("done123").onclick = Done(item.id)
+                    global = item.id
+                    document.getElementById("edit_song").value = data["song"];
+                    document.getElementById("edit_artist").value = data["artist"];
+                    document.getElementById("edit_url").value = data["url"];
+                    document.getElementById("edit_image").value = data["image"]
+                    document.getElementById("myModal").style.display =  'block';
+                },
+                error:function(e){
+
+                }
+            });
+        }
+        function Done()
+        {
+            $.ajax({
+                type:"post",
+                url:"done",
+                data:{
+                    id:global,
+                    song_name:document.getElementById("edit_song").value,
+                    artist:document.getElementById("edit_artist").value,
+                    url:document.getElementById("edit_url").value,
+                    image:document.getElementById("edit_image").value,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success:function(data){
+                    document.getElementById("myModal").style.display = "none"
+                    alert(data["response"])
+                },
+                error:function()
+                {
+                    alert("fail")
+                }
+            });
+        }
+        function Delete(item)
+        {
+            //alert(item.id);
+            $.ajax({
+                type : 'post',
+                url : 'delete',
+                data : {
+                    id : item.id,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success : function(data){
+                    $('.'+item.id).remove();
+                    alert(data['response'])
+                },
+                error : function()
+                {
+                    alert("Delete fail")
+                }
+            });
+        }
+    </script>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                    <script>
+                        alert('{{message}}')
+                    </script>
+            {% endfor %}
+        </ul>
+    {%endif%}
+
+    <h2>Search</h2>
+    <div>曲名: <input type="type" name = "song_name" id = "search_song">
+                <input type="button" onclick="Search()" value="送出">
+    </div>
+        {% csrf_token %}
+        <h2>Insert</h2>
+        <div>曲名: <input type="text" name = "song_name" id = "insert_song">
+            歌手:<input type="text" name = "artist" id = "insert_artist">
+            url:<input type="text" name = url id = "insert_url">
+            image:<input type="text" name="image" id = "insert_image">
+            length:<input type="text" name="length" id = "insert_length">
+            <input type="button" onclick = "Insert()" value="送出">
+        </div>
+    <div class = "display"></div>
+    <!--
+    <form action="/" method="POST">
+        {% csrf_token %}
+        <h2>Modify</h2>
+        <div>曲名: <input type="text" name = "song_name">
+                    歌手:<input type="text" name = "artist">
+                    url:<input type="text" name = url>
+                    <input type="submit" value="送出" name="edit">
+        </div>
+        <div>接收到的資料：{{edit_mess}}</div>
+    </form>
+    <form action="/" method="POST">
+        {% csrf_token %}
+        <h2>Delete</h2>
+        <div>曲名: <input type="text" name = "song_name">
+                    <input type="submit" value="送出" name="delete">
+        </div>
+        <div>接收到的資料：{{delete_mess}}</div>
+    </form>
+
+    -->
+</body>

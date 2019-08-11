@@ -1,0 +1,18 @@
+<body>{% for song in songs %}
+    <div style="height:300px">
+        <form action="/edit/" method="POST">
+        歌名: <input type="text" name = 'song_name'value = {{song.song_name}}>
+        作者: <input type="text" name="artist" value={{song.artist}}>
+        url: <input type="text" name="url" value={{song.url}}>
+        {%if song.image%}
+            <img src={{song.image}} width="150" height="150">
+        {%endif%}
+        
+            {% csrf_token %}
+            <button type="submit" name = 'done' value={{song.id}}>送出</button>
+        </form>
+        
+    <div>
+
+{%endfor%}
+</body>

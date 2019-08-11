@@ -1,0 +1,34 @@
+<body>
+    <div>
+        <form action="/">
+            <button type="submit">返回主頁</button>
+        </form>
+    </div>
+    <form action="/search/" method="POST">
+        {% csrf_token %}
+        {% if not songs%}
+            <p>
+                找不到歌曲
+            </p>
+        {%endif%}
+        {% for song in songs %}
+            <div style="height:300px">歌名: {{song.song_name}}
+                作者: {{song.artist}}
+                url: <a href={{song.url}}>{{song.url}}
+                </a>
+                {%if song.image%}
+                    <img src={{song.image}} width="150" height="150">
+                {%endif%}
+                <div>
+                    <form action="/search/" method="POST"></form>
+                        <button type="submit" value={{song.id}} name="delete">刪除</button>
+                    </form> 
+                    <form action="/edit/" method="GET">
+                        <button type="submit" value={{song.id}} name="edit">修改</button>
+                    </form>
+                </div>
+
+            </div>
+        {%endfor%}
+    </form>
+</body>
